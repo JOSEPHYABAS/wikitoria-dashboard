@@ -6224,21 +6224,20 @@ Confirmer ?')) {
       );
     }
     
+    
     // ==================== RENDER APP ====================
-    function initDashboardApp() {
-      ReactDOM.render(<App />, document.getElementById('root'));
+    // Rendre la fonction globalement accessible
+    window.initDashboardApp = function() {
+      console.log('🚀 Initialisation du dashboard React...');
+      try {
+        ReactDOM.render(<App />, document.getElementById('root'));
+        console.log('✅ Dashboard React initialisé avec succès');
+      } catch (error) {
+        console.error('❌ Erreur lors de l\'initialisation du dashboard:', error);
+      }
     }
     
-    // Appeler immédiatement si pas besoin d'auth (pour debug local)
-    // Sinon, sera appelé par showDashboard() après authentification Firebase
-    if (!firebase.apps.length || auth.currentUser) {
-      // Si Firebase n'est pas initialisé ou si déjà connecté, charger le dashboard
-      setTimeout(() => {
-        if (auth.currentUser && document.getElementById('root').classList.contains('hidden') === false) {
-          initDashboardApp();
-        }
-      }, 500);
-    }
+    // Note: Cette fonction sera appelée par showDashboard() après authentification Firebase
   </script>
 </body>
 </html>
