@@ -5158,9 +5158,7 @@ Cycle: ${moisNom} ${cycleSimple.annee}`;
 Exercice: ${exerciceAnnuel}`;
         }
         
-        if (!confirm(message + '
-
-Confirmer ?')) {
+        if (!confirm(message + '\n\nConfirmer ?')) {
           return;
         }
         
@@ -6223,7 +6221,6 @@ Confirmer ?')) {
         </div>
       );
     }
-    
     
     // ==================== RENDER APP ====================
     // Rendre la fonction globalement accessible
