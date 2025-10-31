@@ -2738,6 +2738,24 @@
                 <button className="btn small" onClick={handleSelectAll}>
                   {selectedDossiers.length === filteredDossiers.length ? '❌ Tout désélectionner' : '✓ Tout sélectionner'}
                 </button>
+            <button
+              className={`sub-tab ${activeSubTab === 'transfert' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('transfert')}
+            >
+              🔄 Transfert agences
+            </button>
+            <button
+              className={`sub-tab ${activeSubTab === 'archivage' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('archivage')}
+            >
+              📦 Archivage
+            </button>
+            <button
+              className={`sub-tab ${activeSubTab === 'ajoutRevision' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('ajoutRevision')}
+            >
+              ➕ Ajout masse révision
+            </button>
               </div>
               
               <div style={{ maxHeight: '400px', overflowY: 'auto', border: '1px solid var(--line)', borderRadius: '8px' }}>
@@ -3404,6 +3422,12 @@
               📂 Affectation en masse
             </button>
             <button
+              className={`sub-tab ${activeSubTab === 'transfert' ? 'active' : ''}`}
+              onClick={() => setActiveSubTab('transfert')}
+            >
+              🔄 Transfert agences
+            </button>
+            <button
               className={`sub-tab ${activeSubTab === 'revisionSimple' ? 'active' : ''}`}
               onClick={() => setActiveSubTab('revisionSimple')}
             >
@@ -3428,11 +3452,45 @@
           )}
           
           {activeSubTab === 'agencies' && (
-            <AgenciesManagement agencies={agencies} setAgencies={setAgencies} showToast={showToast} />
+            <AgenciesManagement 
+              agencies={agencies} 
+              setAgencies={setAgencies} 
+              showToast={showToast} 
+              dossiers={dossiers}
+              setDossiers={setDossiers}
+            />
           )}
           
           {activeSubTab === 'affectation' && (
             <AffectationMasse users={users} agencies={agencies} dossiers={dossiers} setDossiers={setDossiers} showToast={showToast} />
+          )}
+          
+          {activeSubTab === 'transfert' && (
+            <TransfertMasseDossiers 
+              agencies={agencies} 
+              dossiers={dossiers} 
+              setDossiers={setDossiers} 
+              showToast={showToast} 
+            />
+          )}
+          
+          {activeSubTab === 'archivage' && (
+            <ArchivageDossiers 
+              dossiers={dossiers} 
+              setDossiers={setDossiers} 
+              agencies={agencies}
+              showToast={showToast} 
+            />
+          )}
+          
+          {activeSubTab === 'ajoutRevision' && (
+            <AjoutMasseRevision 
+              dossiers={dossiers} 
+              setDossiers={setDossiers} 
+              agencies={agencies}
+              showToast={showToast}
+              currentUser={currentUser}
+            />
           )}
           
           {activeSubTab === 'revisionSimple' && (
@@ -3546,9 +3604,17 @@
       
       return (
         <div style={{paddingTop: '20px'}}>
-          <h1 style={{fontSize: '28px', fontWeight: 800, marginBottom: '20px'}}>
+          <h1 style={{fontSize: '28px', fontWeight: 800, marginBottom: '12px'}}>
             📋 Révision Simplifiée
           </h1>
+          {currentDossier && (
+            <div style={{marginBottom: '20px', padding: '12px', background: '#f0f4ff', borderRadius: '8px', border: '1px solid #dbeafe'}}>
+              <span style={{fontSize: '14px', fontWeight: 600, color: '#1e40af'}}>
+                📁 {currentDossier.number} - {currentDossier.name} | 
+                👨‍💼 Responsable: <strong>{currentDossier.responsable || 'Non attribué'}</strong>
+              </span>
+            </div>
+          )}
           
           {!showCycles ? (
             <div className="panel">
@@ -3657,6 +3723,32 @@
                     </div>
                     
                     <div>
+                      {/* En-tête OUI/NON/N/A */}
+                      <div style={{
+                        display: 'flex',
+                        gap: '12px',
+                        padding: '8px 10px',
+                        background: '#f7f8fb',
+                        borderBottom: '2px solid var(--line)',
+                        fontWeight: 700,
+                        fontSize: '12px'
+                      }}>
+                        <div style={{flex: '0 0 40%'}}>
+                          Diligence
+                        </div>
+                        <div style={{display: 'flex', gap: '8px', minWidth: '160px', justifyContent: 'center'}}>
+                          <span style={{color: '#14b37d', minWidth: '42px', textAlign: 'center'}}>OUI</span>
+                          <span style={{color: '#e24d4d', minWidth: '42px', textAlign: 'center'}}>NON</span>
+                          <span style={{color: '#a7b0c2', minWidth: '42px', textAlign: 'center'}}>N/A</span>
+                        </div>
+                        <div style={{minWidth: '200px', textAlign: 'center'}}>
+                          Contrôleur / Date
+                        </div>
+                        <div style={{width: '180px', textAlign: 'center'}}>
+                          Observations
+                        </div>
+                      </div>
+                      
                       {cycle.diligences.map((diligence, diligenceIndex) => (
                         <div key={diligenceIndex} style={{
                           display: 'flex',
@@ -3669,30 +3761,27 @@
                             {diligence.description}
                           </div>
                           
-                          <div style={{display: 'flex', gap: '8px'}}>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'}}>
+                          <div style={{display: 'flex', gap: '8px', minWidth: '160px', justifyContent: 'center'}}>
+                            <label style={{display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minWidth: '42px'}}>
                               <input 
                                 type="radio" 
                                 checked={diligence.oui}
                                 onChange={() => updateDiligence(cycleIndex, diligenceIndex, 'oui', true)}
                               />
-                              <span style={{color: '#14b37d', fontWeight: 600, fontSize: '12px'}}>OUI</span>
                             </label>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'}}>
+                            <label style={{display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minWidth: '42px'}}>
                               <input 
                                 type="radio" 
                                 checked={diligence.non}
                                 onChange={() => updateDiligence(cycleIndex, diligenceIndex, 'non', true)}
                               />
-                              <span style={{color: '#e24d4d', fontWeight: 600, fontSize: '12px'}}>NON</span>
                             </label>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'}}>
+                            <label style={{display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minWidth: '42px'}}>
                               <input 
                                 type="radio" 
                                 checked={diligence.na}
                                 onChange={() => updateDiligence(cycleIndex, diligenceIndex, 'na', true)}
                               />
-                              <span style={{color: '#a7b0c2', fontWeight: 600, fontSize: '12px'}}>N/A</span>
                             </label>
                           </div>
                           
@@ -3833,9 +3922,17 @@
       
       return (
         <div style={{paddingTop: '20px'}}>
-          <h1 style={{fontSize: '28px', fontWeight: 800, marginBottom: '20px'}}>
+          <h1 style={{fontSize: '28px', fontWeight: 800, marginBottom: '12px'}}>
             📊 Révision Annuelle - Bilan
           </h1>
+          {currentDossier && (
+            <div style={{marginBottom: '20px', padding: '12px', background: '#f0f4ff', borderRadius: '8px', border: '1px solid #dbeafe'}}>
+              <span style={{fontSize: '14px', fontWeight: 600, color: '#1e40af'}}>
+                📁 {currentDossier.number} - {currentDossier.name} | 
+                👨‍💼 Responsable: <strong>{currentDossier.responsable || 'Non attribué'}</strong>
+              </span>
+            </div>
+          )}
           
           {!showCycles ? (
             <div className="panel">
@@ -3956,6 +4053,32 @@
                     </div>
                     
                     <div>
+                      {/* En-tête OUI/NON/N/A */}
+                      <div style={{
+                        display: 'flex',
+                        gap: '12px',
+                        padding: '8px 10px',
+                        background: '#f7f8fb',
+                        borderBottom: '2px solid var(--line)',
+                        fontWeight: 700,
+                        fontSize: '12px'
+                      }}>
+                        <div style={{flex: '0 0 40%'}}>
+                          Diligence
+                        </div>
+                        <div style={{display: 'flex', gap: '8px', minWidth: '160px', justifyContent: 'center'}}>
+                          <span style={{color: '#14b37d', minWidth: '42px', textAlign: 'center'}}>OUI</span>
+                          <span style={{color: '#e24d4d', minWidth: '42px', textAlign: 'center'}}>NON</span>
+                          <span style={{color: '#a7b0c2', minWidth: '42px', textAlign: 'center'}}>N/A</span>
+                        </div>
+                        <div style={{minWidth: '200px', textAlign: 'center'}}>
+                          Contrôleur / Date
+                        </div>
+                        <div style={{width: '180px', textAlign: 'center'}}>
+                          Observations
+                        </div>
+                      </div>
+                      
                       {cycle.diligences.map((diligence, diligenceIndex) => (
                         <div key={diligenceIndex} style={{
                           display: 'flex',
@@ -3968,30 +4091,27 @@
                             {diligence.description}
                           </div>
                           
-                          <div style={{display: 'flex', gap: '8px'}}>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'}}>
+                          <div style={{display: 'flex', gap: '8px', minWidth: '160px', justifyContent: 'center'}}>
+                            <label style={{display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minWidth: '42px'}}>
                               <input 
                                 type="radio" 
                                 checked={diligence.oui}
                                 onChange={() => updateDiligence(cycleIndex, diligenceIndex, 'oui', true)}
                               />
-                              <span style={{color: '#14b37d', fontWeight: 600, fontSize: '12px'}}>OUI</span>
                             </label>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'}}>
+                            <label style={{display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minWidth: '42px'}}>
                               <input 
                                 type="radio" 
                                 checked={diligence.non}
                                 onChange={() => updateDiligence(cycleIndex, diligenceIndex, 'non', true)}
                               />
-                              <span style={{color: '#e24d4d', fontWeight: 600, fontSize: '12px'}}>NON</span>
                             </label>
-                            <label style={{display: 'flex', alignItems: 'center', gap: '4px', cursor: 'pointer'}}>
+                            <label style={{display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', minWidth: '42px'}}>
                               <input 
                                 type="radio" 
                                 checked={diligence.na}
                                 onChange={() => updateDiligence(cycleIndex, diligenceIndex, 'na', true)}
                               />
-                              <span style={{color: '#a7b0c2', fontWeight: 600, fontSize: '12px'}}>N/A</span>
                             </label>
                           </div>
                           
@@ -4262,7 +4382,32 @@
     }
     
     // ==================== AGENCIES MANAGEMENT ====================
-    function AgenciesManagement({ agencies, setAgencies, showToast }) {
+    function AgenciesManagement({ agencies, setAgencies, showToast, dossiers, setDossiers }) {
+      const handleDeleteAgency = (agency) => {
+        // Compter les dossiers de cette agence
+        const dossiersCount = dossiers.filter(d => d.agence === agency.id).length;
+        
+        if (dossiersCount > 0) {
+          if (!confirm(`⚠️ ATTENTION : Cette agence contient ${dossiersCount} dossier(s).\n\nSi vous supprimez cette agence, tous les dossiers associés seront également supprimés.\n\nÊtes-vous sûr de vouloir continuer ?`)) {
+            return;
+          }
+        } else {
+          if (!confirm(`Voulez-vous vraiment supprimer l'agence "${agency.name}" ?`)) {
+            return;
+          }
+        }
+        
+        // Supprimer l'agence
+        const newAgencies = agencies.filter(a => a.id !== agency.id);
+        setAgencies(newAgencies);
+        
+        // Supprimer tous les dossiers de cette agence
+        const newDossiers = dossiers.filter(d => d.agence !== agency.id);
+        setDossiers(newDossiers);
+        
+        showToast(`Agence "${agency.name}" supprimée avec succès ${dossiersCount > 0 ? `(${dossiersCount} dossier(s) supprimé(s))` : ''}`, 'success');
+      };
+      
       return (
         <div className="panel">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -4271,40 +4416,1032 @@
           </div>
           
           <div className="grid-3">
-            {agencies.filter(a => a.id !== 'tous').map(agency => (
-              <div key={agency.id} style={{ 
-                padding: '24px', 
-                border: '2px solid ' + agency.color + '40', 
-                borderRadius: '12px',
-                background: agency.color + '08'
-              }}>
-                <div style={{ 
-                  width: '48px', 
-                  height: '48px', 
-                  borderRadius: '12px', 
-                  background: agency.color,
-                  marginBottom: '16px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '24px'
+            {agencies.filter(a => a.id !== 'tous').map(agency => {
+              const dossiersCount = dossiers.filter(d => d.agence === agency.id).length;
+              
+              return (
+                <div key={agency.id} style={{ 
+                  padding: '24px', 
+                  border: '2px solid ' + agency.color + '40', 
+                  borderRadius: '12px',
+                  background: agency.color + '08'
                 }}>
-                  🏢
+                  <div style={{ 
+                    width: '48px', 
+                    height: '48px', 
+                    borderRadius: '12px', 
+                    background: agency.color,
+                    marginBottom: '16px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '24px'
+                  }}>
+                    🏢
+                  </div>
+                  <div style={{ fontWeight: 700, fontSize: '18px', marginBottom: '8px' }}>
+                    {agency.name}
+                  </div>
+                  <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '8px' }}>
+                    ID: {agency.id}
+                  </div>
+                  <div style={{ fontSize: '13px', color: 'var(--text)', marginBottom: '16px', fontWeight: 600 }}>
+                    📁 {dossiersCount} dossier{dossiersCount > 1 ? 's' : ''}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    <button className="btn small">✏️ Modifier</button>
+                    <button 
+                      className="btn small danger" 
+                      onClick={() => handleDeleteAgency(agency)}
+                      title="Supprimer cette agence"
+                    >
+                      🗑️ Supprimer
+                    </button>
+                  </div>
                 </div>
-                <div style={{ fontWeight: 700, fontSize: '18px', marginBottom: '8px' }}>
-                  {agency.name}
-                </div>
-                <div style={{ fontSize: '12px', color: 'var(--muted)', marginBottom: '16px' }}>
-                  ID: {agency.id}
-                </div>
-                <button className="btn small">✏️ Modifier</button>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       );
     }
     
+
+    // ==================== TRANSFERT MASSE DOSSIERS ====================
+    function TransfertMasseDossiers({ agencies, dossiers, setDossiers, showToast }) {
+      const [agenceSource, setAgenceSource] = useState('');
+      const [agenceDestination, setAgenceDestination] = useState('');
+      const [selectedDossiers, setSelectedDossiers] = useState([]);
+      const [selectAll, setSelectAll] = useState(false);
+      
+      // Filtrer les dossiers de l'agence source
+      const dossiersSource = agenceSource ? dossiers.filter(d => d.agence === agenceSource) : [];
+      
+      // Gérer la sélection/désélection de tous les dossiers
+      const handleSelectAll = (checked) => {
+        setSelectAll(checked);
+        if (checked) {
+          setSelectedDossiers(dossiersSource.map(d => d.id));
+        } else {
+          setSelectedDossiers([]);
+        }
+      };
+      
+      // Gérer la sélection d'un dossier individuel
+      const handleSelectDossier = (dossierId) => {
+        if (selectedDossiers.includes(dossierId)) {
+          setSelectedDossiers(selectedDossiers.filter(id => id !== dossierId));
+        } else {
+          setSelectedDossiers([...selectedDossiers, dossierId]);
+        }
+      };
+      
+      // Transférer les dossiers sélectionnés
+      const handleTransfert = () => {
+        if (!agenceSource || !agenceDestination) {
+          showToast('Veuillez sélectionner une agence source et une agence destination', 'error');
+          return;
+        }
+        
+        if (agenceSource === agenceDestination) {
+          showToast('L\'agence source et destination doivent être différentes', 'error');
+          return;
+        }
+        
+        if (selectedDossiers.length === 0) {
+          showToast('Veuillez sélectionner au moins un dossier à transférer', 'error');
+          return;
+        }
+        
+        const agenceSourceName = agencies.find(a => a.id === agenceSource)?.name || agenceSource;
+        const agenceDestName = agencies.find(a => a.id === agenceDestination)?.name || agenceDestination;
+        
+        if (!confirm(`⚠️ CONFIRMATION DE TRANSFERT
+
+${selectedDossiers.length} dossier(s) seront transférés
+DE: ${agenceSourceName}
+VERS: ${agenceDestName}
+
+Cette action est irréversible.
+Confirmez-vous le transfert ?`)) {
+          return;
+        }
+        
+        // Effectuer le transfert
+        const newDossiers = dossiers.map(d => {
+          if (selectedDossiers.includes(d.id)) {
+            return { ...d, agence: agenceDestination };
+          }
+          return d;
+        });
+        
+        setDossiers(newDossiers);
+        showToast(`${selectedDossiers.length} dossier(s) transféré(s) avec succès de "${agenceSourceName}" vers "${agenceDestName}"`, 'success');
+        
+        // Réinitialiser
+        setSelectedDossiers([]);
+        setSelectAll(false);
+      };
+      
+      return (
+        <div className="panel">
+          <div style={{ marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>🔄 Transfert en masse de dossiers</h2>
+            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>
+              Transférer plusieurs dossiers d\'une agence vers une autre agence
+            </p>
+          </div>
+          
+          {/* Alerte d\'avertissement */}
+          <div style={{ 
+            padding: '16px', 
+            background: '#fef3c7', 
+            border: '2px solid #f59e0b', 
+            borderRadius: '12px', 
+            marginBottom: '24px',
+            display: 'flex',
+            gap: '12px'
+          }}>
+            <span style={{ fontSize: '20px' }}>⚠️</span>
+            <div>
+              <div style={{ fontWeight: 700, marginBottom: '4px', color: '#92400e' }}>
+                Attention : Action irréversible
+              </div>
+              <div style={{ fontSize: '13px', color: '#78350f' }}>
+                Le transfert de dossiers est une opération définitive. Assurez-vous de bien vérifier l\'agence source et destination avant de valider.
+              </div>
+            </div>
+          </div>
+          
+          {/* Sélection des agences */}
+          <div className="grid-2" style={{ marginBottom: '24px', gap: '24px' }}>
+            <div>
+              <label className="form-label" style={{ fontWeight: 600, marginBottom: '12px', display: 'block' }}>
+                🏢 Agence source
+              </label>
+              <select 
+                className="form-control" 
+                value={agenceSource}
+                onChange={(e) => {
+                  setAgenceSource(e.target.value);
+                  setSelectedDossiers([]);
+                  setSelectAll(false);
+                }}
+              >
+                <option value="">Sélectionner une agence source</option>
+                {agencies.filter(a => a.id !== 'tous').map(agency => {
+                  const count = dossiers.filter(d => d.agence === agency.id).length;
+                  return (
+                    <option key={agency.id} value={agency.id}>
+                      {agency.name} ({count} dossier{count > 1 ? 's' : ''})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+            
+            <div>
+              <label className="form-label" style={{ fontWeight: 600, marginBottom: '12px', display: 'block' }}>
+                🎯 Agence destination
+              </label>
+              <select 
+                className="form-control" 
+                value={agenceDestination}
+                onChange={(e) => setAgenceDestination(e.target.value)}
+              >
+                <option value="">Sélectionner une agence destination</option>
+                {agencies.filter(a => a.id !== 'tous' && a.id !== agenceSource).map(agency => {
+                  const count = dossiers.filter(d => d.agence === agency.id).length;
+                  return (
+                    <option key={agency.id} value={agency.id}>
+                      {agency.name} ({count} dossier{count > 1 ? 's' : ''})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          </div>
+          
+          {/* Liste des dossiers à transférer */}
+          {agenceSource && dossiersSource.length > 0 && (
+            <div>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '16px',
+                padding: '12px 16px',
+                background: 'var(--bg)',
+                borderRadius: '8px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectAll}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontWeight: 600, fontSize: '14px' }}>
+                    Sélectionner tout ({dossiersSource.length} dossiers)
+                  </span>
+                </div>
+                <span style={{ 
+                  padding: '4px 12px', 
+                  background: selectedDossiers.length > 0 ? 'var(--brand)' : 'var(--muted)', 
+                  color: 'white', 
+                  borderRadius: '12px', 
+                  fontSize: '13px',
+                  fontWeight: 600 
+                }}>
+                  {selectedDossiers.length} sélectionné{selectedDossiers.length > 1 ? 's' : ''}
+                </span>
+              </div>
+              
+              <div style={{ 
+                maxHeight: '400px', 
+                overflowY: 'auto',
+                border: '1px solid var(--line)',
+                borderRadius: '8px'
+              }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '50px', textAlign: 'center' }}>✓</th>
+                      <th>Nom du dossier</th>
+                      <th>Régime fiscal</th>
+                      <th>Régime TVA</th>
+                      <th>Clôture</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {dossiersSource.map(dossier => (
+                      <tr 
+                        key={dossier.id}
+                        style={{ 
+                          background: selectedDossiers.includes(dossier.id) ? '#f0f4ff' : 'transparent',
+                          cursor: 'pointer'
+                        }}
+                        onClick={() => handleSelectDossier(dossier.id)}
+                      >
+                        <td style={{ textAlign: 'center' }}>
+                          <input
+                            type="checkbox"
+                            checked={selectedDossiers.includes(dossier.id)}
+                            onChange={() => handleSelectDossier(dossier.id)}
+                            style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                            onClick={(e) => e.stopPropagation()}
+                          />
+                        </td>
+                        <td><strong>{dossier.nomDossier}</strong></td>
+                        <td>
+                          <span className="badge">{dossier.regimeFiscal}</span>
+                        </td>
+                        <td>
+                          <span className="badge">{dossier.tva.regime}</span>
+                        </td>
+                        <td>{dossier.dateCloture}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              
+              {/* Bouton de transfert */}
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'flex-end', 
+                gap: '12px',
+                marginTop: '24px',
+                paddingTop: '24px',
+                borderTop: '2px solid var(--line)'
+              }}>
+                <button 
+                  className="btn"
+                  onClick={() => {
+                    setSelectedDossiers([]);
+                    setSelectAll(false);
+                  }}
+                  disabled={selectedDossiers.length === 0}
+                >
+                  ✖️ Annuler la sélection
+                </button>
+                <button 
+                  className="btn primary"
+                  onClick={handleTransfert}
+                  disabled={!agenceDestination || selectedDossiers.length === 0}
+                  style={{ minWidth: '200px' }}
+                >
+                  🔄 Transférer {selectedDossiers.length > 0 ? `(${selectedDossiers.length})` : ''}
+                </button>
+              </div>
+            </div>
+          )}
+          
+          {agenceSource && dossiersSource.length === 0 && (
+            <div style={{ 
+              padding: '48px', 
+              textAlign: 'center', 
+              color: 'var(--muted)',
+              background: 'var(--bg)',
+              borderRadius: '12px',
+              border: '2px dashed var(--line)'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>📂</div>
+              <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>
+                Aucun dossier dans cette agence
+              </div>
+              <div style={{ fontSize: '14px' }}>
+                L\'agence sélectionnée ne contient aucun dossier à transférer
+              </div>
+            </div>
+          )}
+          
+          {!agenceSource && (
+            <div style={{ 
+              padding: '48px', 
+              textAlign: 'center', 
+              color: 'var(--muted)',
+              background: 'var(--bg)',
+              borderRadius: '12px',
+              border: '2px dashed var(--line)'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>👆</div>
+              <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>
+                Sélectionnez une agence source
+              </div>
+              <div style={{ fontSize: '14px' }}>
+                Choisissez l\'agence depuis laquelle vous souhaitez transférer des dossiers
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+
+    // ==================== ARCHIVAGE DOSSIERS (ADMIN) ====================
+    function ArchivageDossiers({ dossiers, setDossiers, agencies, showToast }) {
+      const [viewMode, setViewMode] = useState('actifs'); // 'actifs' ou 'archives'
+      const [selectedDossiers, setSelectedDossiers] = useState([]);
+      const [selectAll, setSelectAll] = useState(false);
+      const [filterAgence, setFilterAgence] = useState('tous');
+      
+      // Filtrer les dossiers actifs et archivés
+      const dossiersActifs = dossiers.filter(d => !d.archived);
+      const dossiersArchives = dossiers.filter(d => d.archived);
+      
+      // Appliquer le filtre d'agence
+      const currentDossiers = viewMode === 'actifs' ? dossiersActifs : dossiersArchives;
+      const filteredDossiers = filterAgence === 'tous' 
+        ? currentDossiers 
+        : currentDossiers.filter(d => d.agence === filterAgence);
+      
+      // Gérer la sélection
+      const handleSelectAll = (checked) => {
+        setSelectAll(checked);
+        if (checked) {
+          setSelectedDossiers(filteredDossiers.map(d => d.id));
+        } else {
+          setSelectedDossiers([]);
+        }
+      };
+      
+      const handleSelectDossier = (dossierId) => {
+        if (selectedDossiers.includes(dossierId)) {
+          setSelectedDossiers(selectedDossiers.filter(id => id !== dossierId));
+        } else {
+          setSelectedDossiers([...selectedDossiers, dossierId]);
+        }
+      };
+      
+      // Archiver les dossiers sélectionnés
+      const handleArchiver = () => {
+        if (selectedDossiers.length === 0) {
+          showToast('Veuillez sélectionner au moins un dossier à archiver', 'error');
+          return;
+        }
+        
+        if (!confirm(`⚠️ Archiver ${selectedDossiers.length} dossier(s) ?
+
+Les dossiers archivés seront masqués des vues principales mais pourront être restaurés à tout moment.`)) {
+          return;
+        }
+        
+        const newDossiers = dossiers.map(d => 
+          selectedDossiers.includes(d.id) ? { ...d, archived: true, archivedDate: new Date().toISOString() } : d
+        );
+        
+        setDossiers(newDossiers);
+        showToast(`${selectedDossiers.length} dossier(s) archivé(s) avec succès`, 'success');
+        setSelectedDossiers([]);
+        setSelectAll(false);
+      };
+      
+      // Désarchiver les dossiers sélectionnés
+      const handleDesarchiver = () => {
+        if (selectedDossiers.length === 0) {
+          showToast('Veuillez sélectionner au moins un dossier à désarchiver', 'error');
+          return;
+        }
+        
+        if (!confirm(`Désarchiver ${selectedDossiers.length} dossier(s) ?
+
+Les dossiers seront restaurés et à nouveau visibles dans toutes les vues.`)) {
+          return;
+        }
+        
+        const newDossiers = dossiers.map(d => {
+          if (selectedDossiers.includes(d.id)) {
+            const { archived, archivedDate, ...rest } = d;
+            return rest;
+          }
+          return d;
+        });
+        
+        setDossiers(newDossiers);
+        showToast(`${selectedDossiers.length} dossier(s) désarchivé(s) avec succès`, 'success');
+        setSelectedDossiers([]);
+        setSelectAll(false);
+      };
+      
+      // Réinitialiser la sélection lors du changement de vue
+      React.useEffect(() => {
+        setSelectedDossiers([]);
+        setSelectAll(false);
+      }, [viewMode, filterAgence]);
+      
+      return (
+        <div className="panel">
+          <div style={{ marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
+              📦 Archivage des dossiers
+            </h2>
+            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>
+              Archiver ou restaurer des dossiers pour organiser votre base de données
+            </p>
+          </div>
+          
+          {/* Statistiques */}
+          <div className="grid-3" style={{ marginBottom: '24px' }}>
+            <div style={{ padding: '20px', background: '#f0f4ff', borderRadius: '12px', border: '2px solid #dbeafe' }}>
+              <div style={{ fontSize: '32px', fontWeight: 700, color: 'var(--brand)', marginBottom: '4px' }}>
+                {dossiersActifs.length}
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>
+                📂 Dossiers actifs
+              </div>
+            </div>
+            <div style={{ padding: '20px', background: '#fef3c7', borderRadius: '12px', border: '2px solid #fcd34d' }}>
+              <div style={{ fontSize: '32px', fontWeight: 700, color: '#d97706', marginBottom: '4px' }}>
+                {dossiersArchives.length}
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>
+                📦 Dossiers archivés
+              </div>
+            </div>
+            <div style={{ padding: '20px', background: '#f0fdf4', borderRadius: '12px', border: '2px solid #86efac' }}>
+              <div style={{ fontSize: '32px', fontWeight: 700, color: '#16a34a', marginBottom: '4px' }}>
+                {selectedDossiers.length}
+              </div>
+              <div style={{ fontSize: '13px', color: 'var(--muted)', fontWeight: 600 }}>
+                ✓ Dossiers sélectionnés
+              </div>
+            </div>
+          </div>
+          
+          {/* Filtres et actions */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: '20px',
+            gap: '16px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{ display: 'flex', gap: '8px' }}>
+              <button
+                className={`btn ${viewMode === 'actifs' ? 'primary' : ''}`}
+                onClick={() => setViewMode('actifs')}
+              >
+                📂 Actifs ({dossiersActifs.length})
+              </button>
+              <button
+                className={`btn ${viewMode === 'archives' ? 'primary' : ''}`}
+                onClick={() => setViewMode('archives')}
+              >
+                📦 Archives ({dossiersArchives.length})
+              </button>
+            </div>
+            
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <select 
+                className="form-control" 
+                value={filterAgence}
+                onChange={(e) => setFilterAgence(e.target.value)}
+                style={{ minWidth: '200px' }}
+              >
+                <option value="tous">Toutes les agences</option>
+                {agencies.filter(a => a.id !== 'tous').map(agency => {
+                  const count = currentDossiers.filter(d => d.agence === agency.id).length;
+                  return (
+                    <option key={agency.id} value={agency.id}>
+                      {agency.name} ({count})
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
+          </div>
+          
+          {/* Liste des dossiers */}
+          {filteredDossiers.length > 0 ? (
+            <>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '16px',
+                padding: '12px 16px',
+                background: 'var(--bg)',
+                borderRadius: '8px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectAll}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontWeight: 600, fontSize: '14px' }}>
+                    Sélectionner tout ({filteredDossiers.length} dossiers)
+                  </span>
+                </div>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  {viewMode === 'actifs' && (
+                    <button 
+                      className="btn primary"
+                      onClick={handleArchiver}
+                      disabled={selectedDossiers.length === 0}
+                    >
+                      📦 Archiver ({selectedDossiers.length})
+                    </button>
+                  )}
+                  {viewMode === 'archives' && (
+                    <button 
+                      className="btn primary"
+                      onClick={handleDesarchiver}
+                      disabled={selectedDossiers.length === 0}
+                    >
+                      📂 Désarchiver ({selectedDossiers.length})
+                    </button>
+                  )}
+                </div>
+              </div>
+              
+              <div style={{ 
+                maxHeight: '500px', 
+                overflowY: 'auto',
+                border: '1px solid var(--line)',
+                borderRadius: '8px'
+              }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '50px', textAlign: 'center' }}>✓</th>
+                      <th>Nom du dossier</th>
+                      <th>Agence</th>
+                      <th>Régime fiscal</th>
+                      <th>TVA</th>
+                      <th>Clôture</th>
+                      {viewMode === 'archives' && <th>Date archivage</th>}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredDossiers.map(dossier => {
+                      const agence = agencies.find(a => a.id === dossier.agence);
+                      return (
+                        <tr 
+                          key={dossier.id}
+                          style={{ 
+                            background: selectedDossiers.includes(dossier.id) ? '#f0f4ff' : 'transparent',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => handleSelectDossier(dossier.id)}
+                        >
+                          <td style={{ textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={selectedDossiers.includes(dossier.id)}
+                              onChange={() => handleSelectDossier(dossier.id)}
+                              style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </td>
+                          <td><strong>{dossier.nomDossier}</strong></td>
+                          <td>
+                            <span className="badge" style={{ background: agence?.color + '20', color: agence?.color }}>
+                              {agence?.name || 'N/A'}
+                            </span>
+                          </td>
+                          <td><span className="badge">{dossier.regimeFiscal}</span></td>
+                          <td><span className="badge">{dossier.tva.regime}</span></td>
+                          <td>{dossier.dateCloture}</td>
+                          {viewMode === 'archives' && (
+                            <td style={{ fontSize: '12px', color: 'var(--muted)' }}>
+                              {dossier.archivedDate ? new Date(dossier.archivedDate).toLocaleDateString('fr-FR') : '-'}
+                            </td>
+                          )}
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <div style={{ 
+              padding: '48px', 
+              textAlign: 'center', 
+              color: 'var(--muted)',
+              background: 'var(--bg)',
+              borderRadius: '12px',
+              border: '2px dashed var(--line)'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>
+                {viewMode === 'actifs' ? '📂' : '📦'}
+              </div>
+              <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>
+                Aucun dossier {viewMode === 'archives' ? 'archivé' : 'actif'}
+              </div>
+              <div style={{ fontSize: '14px' }}>
+                {viewMode === 'actifs' 
+                  ? 'Tous les dossiers sont archivés' 
+                  : 'Aucun dossier n\'est archivé pour le moment'}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+
+    // ==================== AJOUT EN MASSE RÉVISION ====================
+    function AjoutMasseRevision({ dossiers, setDossiers, agencies, showToast, currentUser }) {
+      const [typeRevision, setTypeRevision] = useState('simple'); // 'simple' ou 'annuelle'
+      const [selectedDossiers, setSelectedDossiers] = useState([]);
+      const [selectAll, setSelectAll] = useState(false);
+      const [filterAgence, setFilterAgence] = useState('tous');
+      
+      // Paramètres pour révision simplifiée
+      const [cycleSimple, setCycleSimple] = useState({
+        mois: new Date().getMonth() + 1,
+        annee: new Date().getFullYear()
+      });
+      
+      // Paramètres pour révision annuelle
+      const [exerciceAnnuel, setExerciceAnnuel] = useState(new Date().getFullYear());
+      
+      // Filtrer les dossiers selon le type de révision et qui ne sont pas archivés
+      const dossiersDisponibles = dossiers.filter(d => {
+        if (d.archived) return false;
+        
+        // Filtre par agence (admin voit tout, chef d'agence voit son agence)
+        if (currentUser.role === 'Chef d\'agence') {
+          if (!currentUser.agences.includes(d.agence) && !currentUser.agences.includes('tous')) {
+            return false;
+          }
+        }
+        
+        if (typeRevision === 'simple') {
+          return d.regimeFiscal === 'IR' || d.tva.regime === 'Réel simplifié';
+        } else {
+          return d.regimeFiscal === 'IS';
+        }
+      });
+      
+      // Appliquer le filtre d'agence
+      const filteredDossiers = filterAgence === 'tous' 
+        ? dossiersDisponibles 
+        : dossiersDisponibles.filter(d => d.agence === filterAgence);
+      
+      const handleSelectAll = (checked) => {
+        setSelectAll(checked);
+        if (checked) {
+          setSelectedDossiers(filteredDossiers.map(d => d.id));
+        } else {
+          setSelectedDossiers([]);
+        }
+      };
+      
+      const handleSelectDossier = (dossierId) => {
+        if (selectedDossiers.includes(dossierId)) {
+          setSelectedDossiers(selectedDossiers.filter(id => id !== dossierId));
+        } else {
+          setSelectedDossiers([...selectedDossiers, dossierId]);
+        }
+      };
+      
+      const handleAjouterRevision = () => {
+        if (selectedDossiers.length === 0) {
+          showToast('Veuillez sélectionner au moins un dossier', 'error');
+          return;
+        }
+        
+        let message = '';
+        if (typeRevision === 'simple') {
+          const moisNom = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                          'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'][cycleSimple.mois - 1];
+          message = `Ajouter ${selectedDossiers.length} dossier(s) à la révision simplifiée
+Cycle: ${moisNom} ${cycleSimple.annee}`;
+        } else {
+          message = `Ajouter ${selectedDossiers.length} dossier(s) à la révision annuelle
+Exercice: ${exerciceAnnuel}`;
+        }
+        
+        if (!confirm(message + '
+
+Confirmer ?')) {
+          return;
+        }
+        
+        const newDossiers = dossiers.map(d => {
+          if (selectedDossiers.includes(d.id)) {
+            if (typeRevision === 'simple') {
+              return {
+                ...d,
+                revision_simple: {
+                  actif: true,
+                  euroAttache: 0,
+                  cycle: `${String(cycleSimple.mois).padStart(2, '0')}/${cycleSimple.annee}`,
+                  cycles: d.revision_simple?.cycles || JSON.parse(JSON.stringify(getConfiguredCyclesSimple()))
+                }
+              };
+            } else {
+              return {
+                ...d,
+                revision_annuelle: {
+                  actif: true,
+                  exercice: exerciceAnnuel,
+                  cycles: d.revision_annuelle?.cycles || JSON.parse(JSON.stringify(getConfiguredCyclesAnnuelle()))
+                }
+              };
+            }
+          }
+          return d;
+        });
+        
+        setDossiers(newDossiers);
+        
+        if (typeRevision === 'simple') {
+          const moisNom = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                          'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'][cycleSimple.mois - 1];
+          showToast(`${selectedDossiers.length} dossier(s) ajouté(s) à la révision simplifiée (${moisNom} ${cycleSimple.annee})`, 'success');
+        } else {
+          showToast(`${selectedDossiers.length} dossier(s) ajouté(s) à la révision annuelle (Exercice ${exerciceAnnuel})`, 'success');
+        }
+        
+        setSelectedDossiers([]);
+        setSelectAll(false);
+      };
+      
+      React.useEffect(() => {
+        setSelectedDossiers([]);
+        setSelectAll(false);
+      }, [typeRevision, filterAgence]);
+      
+      return (
+        <div className="panel">
+          <div style={{ marginBottom: '24px' }}>
+            <h2 style={{ fontSize: '20px', fontWeight: 700, marginBottom: '8px' }}>
+              ➕ Ajout en masse à la révision
+            </h2>
+            <p style={{ color: 'var(--muted)', fontSize: '14px' }}>
+              Ajouter plusieurs dossiers simultanément à un cycle de révision
+            </p>
+          </div>
+          
+          {/* Sélection du type de révision */}
+          <div style={{ marginBottom: '24px' }}>
+            <label className="form-label" style={{ marginBottom: '12px', display: 'block', fontWeight: 600 }}>
+              📋 Type de révision
+            </label>
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button
+                className={`btn ${typeRevision === 'simple' ? 'primary' : ''}`}
+                onClick={() => setTypeRevision('simple')}
+                style={{ flex: 1 }}
+              >
+                📋 Révision Simplifiée
+              </button>
+              <button
+                className={`btn ${typeRevision === 'annuelle' ? 'primary' : ''}`}
+                onClick={() => setTypeRevision('annuelle')}
+                style={{ flex: 1 }}
+              >
+                📊 Révision Annuelle
+              </button>
+            </div>
+          </div>
+          
+          {/* Paramètres du cycle */}
+          <div style={{ 
+            padding: '20px', 
+            background: '#f0f4ff', 
+            borderRadius: '12px', 
+            marginBottom: '24px',
+            border: '2px solid #dbeafe'
+          }}>
+            <h3 style={{ fontSize: '15px', fontWeight: 700, marginBottom: '16px', color: 'var(--brand)' }}>
+              ⚙️ Paramètres du cycle
+            </h3>
+            
+            {typeRevision === 'simple' ? (
+              <div className="grid-2" style={{ gap: '16px' }}>
+                <div>
+                  <label className="form-label">Mois</label>
+                  <select
+                    className="form-control"
+                    value={cycleSimple.mois}
+                    onChange={(e) => setCycleSimple({ ...cycleSimple, mois: parseInt(e.target.value) })}
+                  >
+                    {['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 
+                      'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'].map((m, idx) => (
+                      <option key={idx} value={idx + 1}>{m}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="form-label">Année</label>
+                  <input
+                    type="number"
+                    className="form-control"
+                    value={cycleSimple.annee}
+                    onChange={(e) => setCycleSimple({ ...cycleSimple, annee: parseInt(e.target.value) })}
+                    min="2020"
+                    max="2030"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="form-label">Exercice comptable</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={exerciceAnnuel}
+                  onChange={(e) => setExerciceAnnuel(parseInt(e.target.value))}
+                  min="2020"
+                  max="2030"
+                  style={{ maxWidth: '200px' }}
+                />
+              </div>
+            )}
+          </div>
+          
+          {/* Filtres */}
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center',
+            marginBottom: '20px',
+            gap: '16px',
+            flexWrap: 'wrap'
+          }}>
+            <div style={{ fontSize: '14px', fontWeight: 600 }}>
+              {typeRevision === 'simple' 
+                ? '📋 Dossiers éligibles (IR ou Réel simplifié)' 
+                : '📊 Dossiers éligibles (IS)'}
+            </div>
+            
+            <select 
+              className="form-control" 
+              value={filterAgence}
+              onChange={(e) => setFilterAgence(e.target.value)}
+              style={{ minWidth: '200px' }}
+            >
+              <option value="tous">Toutes les agences</option>
+              {agencies.filter(a => a.id !== 'tous').map(agency => {
+                const count = dossiersDisponibles.filter(d => d.agence === agency.id).length;
+                return (
+                  <option key={agency.id} value={agency.id}>
+                    {agency.name} ({count})
+                  </option>
+                );
+              })}
+            </select>
+          </div>
+          
+          {/* Liste des dossiers */}
+          {filteredDossiers.length > 0 ? (
+            <>
+              <div style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '16px',
+                padding: '12px 16px',
+                background: 'var(--bg)',
+                borderRadius: '8px'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                  <input
+                    type="checkbox"
+                    checked={selectAll}
+                    onChange={(e) => handleSelectAll(e.target.checked)}
+                    style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                  />
+                  <span style={{ fontWeight: 600, fontSize: '14px' }}>
+                    Sélectionner tout ({filteredDossiers.length} dossiers)
+                  </span>
+                </div>
+                <button 
+                  className="btn primary"
+                  onClick={handleAjouterRevision}
+                  disabled={selectedDossiers.length === 0}
+                  style={{ minWidth: '200px' }}
+                >
+                  ➕ Ajouter à la révision ({selectedDossiers.length})
+                </button>
+              </div>
+              
+              <div style={{ 
+                maxHeight: '400px', 
+                overflowY: 'auto',
+                border: '1px solid var(--line)',
+                borderRadius: '8px'
+              }}>
+                <table>
+                  <thead>
+                    <tr>
+                      <th style={{ width: '50px', textAlign: 'center' }}>✓</th>
+                      <th>Nom du dossier</th>
+                      <th>Agence</th>
+                      <th>Régime fiscal</th>
+                      <th>TVA</th>
+                      <th>Clôture</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredDossiers.map(dossier => {
+                      const agence = agencies.find(a => a.id === dossier.agence);
+                      return (
+                        <tr 
+                          key={dossier.id}
+                          style={{ 
+                            background: selectedDossiers.includes(dossier.id) ? '#f0f4ff' : 'transparent',
+                            cursor: 'pointer'
+                          }}
+                          onClick={() => handleSelectDossier(dossier.id)}
+                        >
+                          <td style={{ textAlign: 'center' }}>
+                            <input
+                              type="checkbox"
+                              checked={selectedDossiers.includes(dossier.id)}
+                              onChange={() => handleSelectDossier(dossier.id)}
+                              style={{ width: '18px', height: '18px', cursor: 'pointer' }}
+                              onClick={(e) => e.stopPropagation()}
+                            />
+                          </td>
+                          <td><strong>{dossier.nomDossier}</strong></td>
+                          <td>
+                            <span className="badge" style={{ background: agence?.color + '20', color: agence?.color }}>
+                              {agence?.name || 'N/A'}
+                            </span>
+                          </td>
+                          <td><span className="badge">{dossier.regimeFiscal}</span></td>
+                          <td><span className="badge">{dossier.tva.regime}</span></td>
+                          <td>{dossier.dateCloture}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : (
+            <div style={{ 
+              padding: '48px', 
+              textAlign: 'center', 
+              color: 'var(--muted)',
+              background: 'var(--bg)',
+              borderRadius: '12px',
+              border: '2px dashed var(--line)'
+            }}>
+              <div style={{ fontSize: '48px', marginBottom: '16px' }}>📂</div>
+              <div style={{ fontSize: '16px', fontWeight: 600, marginBottom: '8px' }}>
+                Aucun dossier éligible
+              </div>
+              <div style={{ fontSize: '14px' }}>
+                {typeRevision === 'simple' 
+                  ? 'Aucun dossier en IR ou Réel simplifié disponible' 
+                  : 'Aucun dossier en IS disponible'}
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
     // ==================== RIGHTS MANAGEMENT ====================
     function RightsManagement({ users, setUsers, showToast }) {
       return (
